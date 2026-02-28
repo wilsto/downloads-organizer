@@ -1,0 +1,71 @@
+source: "C:/Users/Will/Downloads"
+archive_dir: "C:/Users/Will/Downloads/_Archive"
+
+destinations:
+  Pro: "C:/Users/Will/OneDrive - Servier Monde/Downloads"
+  Perso: "C:/Users/Will/OneDrive/Downloads"
+  Tech: "C:/Users/Will/Downloads/Tech"
+
+dry_run: true
+log_file: "C:/Users/Will/dev/Agents/Downloads/logs/organizer.log"
+
+contexts:
+  Pro:
+    patterns:
+      - "(?i)(powerbi|bisolution|playbook|agile|presentation|meeting|report|invoice|devis|facture)"
+      - "(?i)\\.(pptx|xlsx)$"
+    subfolders: [Documents, Presentations, Spreadsheets, Images, Archives]
+  Perso:
+    patterns:
+      - "(?i)(photo|img_|dcim|scan|identity|carte|passeport|permis|assurance|impot|caf)"
+      - "(?i)(Photos-\\d+)"
+    subfolders: [Documents, Images, Admin, Media, Archives]
+  Tech:
+    patterns:
+      - "(?i)(github|docker|homeassistant|ha-|hacs|node-red|reolink|bambu|argus|windsurf|vscode|\\.py$|\\.js$|\\.ts$|\\.json$|\\.yaml$|\\.yml$)"
+    subfolders: [Code, Config, HomeLab, Images, Archives]
+
+type_mapping:
+  Documents: [pdf, doc, docx, odt, rtf, txt]
+  Images: [png, jpg, jpeg, gif, svg, webp, eps, ico, bmp]
+  Presentations: [pptx, ppt, odp]
+  Spreadsheets: [xlsx, xls, csv, ods]
+  Archives: [zip, rar, 7z, tar, gz, bz2]
+  Executables: [exe, msi, msix, appx]
+  Media: [mp4, mp3, avi, mkv, wav, flac, mov]
+  Code: [py, js, ts, html, css, json, yaml, yml, sh, ps1, bat]
+  Data: [db, sql, sqlite, dat, log, xml]
+
+default_context: "Perso"
+default_type: "Autres"
+
+retention:
+  Executables: 3
+  Archives: 14
+  Data: 3
+  Images: 180
+  Documents: 365
+  Presentations: 365
+  Spreadsheets: 365
+  Media: 90
+  Code: 0
+  Autres: 30
+
+duplicates:
+  enabled: true
+  strategy: "delete"
+  pattern: "\\s*\\(\\d+\\)(?=\\.\\w+$)"
+
+llm:
+  enabled: true
+  base_url: "http://localhost:11434"
+  model: "huihui_ai/qwen3-abliterated:14b"
+  cache_file: "C:/Users/Will/dev/Agents/Downloads/data/llm_cache.json"
+  oneshot_keywords: [installer, setup, guide_installation, readme, changelog, release_notes]
+  keeper_keywords: [facture, devis, contrat, attestation, releve, impot, carte, passeport, cv, diplome]
+
+notification:
+  enabled: true
+  ha_url: "http://homeassistant.local:8123"
+  ha_token_env: "HA_TOKEN"
+  service: "notify/telegram"
