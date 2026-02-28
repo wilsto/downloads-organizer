@@ -1,6 +1,6 @@
 [project]
 name = "downloads-organizer"
-version = "0.1.0"
+version = "0.2.0"
 description = "Agent de tri automatique du dossier Downloads"
 requires-python = ">=3.12"
 dependencies = [
