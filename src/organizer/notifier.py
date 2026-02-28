@@ -9,6 +9,9 @@ from organizer.config import NotificationConfig
 logger = logging.getLogger("organizer")
 
 
+LOG_PATH = "organizer.log"
+
+
 @dataclass
 class RunSummary:
     files_sorted: int = 0
@@ -18,16 +21,24 @@ class RunSummary:
     duration_seconds: float = 0.0
     dry_run: bool = False
 
-    def format_message(self) -> str:
+    def format_title(self) -> str:
         mode = " [DRY-RUN]" if self.dry_run else ""
-        return (
-            f"*Downloads Organizer{mode}*\n\n"
-            f"Fichiers tries: {self.files_sorted}\n"
-            f"Doublons supprimes: {self.duplicates_deleted}\n"
-            f"Fichiers archives: {self.files_archived}\n"
-            f"Duree: {self.duration_seconds:.1f}s\n"
-            f"Erreurs: {self.errors}"
-        )
+        status = "\u2705" if self.errors == 0 else "\u26a0\ufe0f"
+        return f"{status} Downloads Organizer{mode}"
+
+    def format_message(self) -> str:
+        lines = [
+            f"\U0001f4c2 <b>Fichiers tries :</b> {self.files_sorted}",
+            f"\U0001f5d1 <b>Doublons supprimes :</b> {self.duplicates_deleted}",
+            f"\U0001f4e6 <b>Archives :</b> {self.files_archived}",
+            f"\u23f1 <b>Duree :</b> {self.duration_seconds:.1f}s",
+        ]
+        if self.errors > 0:
+            lines.append(f"\u26a0\ufe0f <b>Erreurs :</b> {self.errors}")
+        return "\n".join(lines)
+
+    def format_log_message(self) -> str:
+        return f"\n\U0001f4cb <i>{LOG_PATH}</i>"
 
 
 class Notifier:
@@ -51,7 +62,16 @@ class Notifier:
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
-        payload = {"message": summary.format_message()}
+        message = summary.format_message() + summary.format_log_message()
+        payload = {
+            "who": self._config.who,
+            "title": summary.format_title(),
+            "message": message,
+            "enable_telegram": True,
+            "enable_voice": False,
+            "enable_text": False,
+            "enable_persistent": False,
+        }
 
         try:
             response = httpx.post(url, json=payload, headers=headers, timeout=10)

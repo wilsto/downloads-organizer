@@ -41,6 +41,12 @@ def main():
         help="Preview changes without moving/deleting files",
     )
     parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Process only the first N files (0 = no limit)",
+    )
+    parser.add_argument(
         "--env-file", type=Path, default=ENV_FILE, help="Path to .env file"
     )
     args = parser.parse_args()
@@ -79,7 +85,9 @@ def main():
     mover = FileMover(config.destinations, dry_run=config.dry_run)
 
     files = scan_directory(Path(config.source))
-    log.info("Found %d files to process", len(files))
+    if args.limit > 0:
+        files = files[: args.limit]
+    log.info("Found %d files to process (limit=%s)", len(files), args.limit or "none")
 
     for file_info in files:
         classification = regex_classifier.classify(file_info.name)

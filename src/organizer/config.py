@@ -23,7 +23,8 @@ class NotificationConfig(BaseModel):
     enabled: bool = False
     ha_url: str = "http://homeassistant.local:8123"
     ha_token_env: str = "HA_TOKEN"
-    service: str = "notify/telegram"
+    service: str = "script/notify_engine"
+    who: str = "will"
 
 
 class ContextConfig(BaseModel):

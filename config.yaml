@@ -68,4 +68,5 @@ notification:
   enabled: true
   ha_url: "http://homeassistant.local:8123"
   ha_token_env: "HA_TOKEN"
-  service: "notify/telegram"
+  service: "script/notify_engine"
+  who: "will"
