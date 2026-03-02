@@ -5,15 +5,12 @@ from organizer.config import ContextConfig
 CONTEXTS = {
     "Pro": ContextConfig(
         patterns=["(?i)(powerbi|bisolution|facture|devis)", "(?i)\\.(pptx|xlsx)$"],
-        subfolders=["Documents", "Presentations", "Spreadsheets"],
     ),
     "Perso": ContextConfig(
         patterns=["(?i)(photo|img_|carte|passeport|assurance)"],
-        subfolders=["Documents", "Images", "Admin"],
     ),
     "Tech": ContextConfig(
         patterns=["(?i)(github|docker|homeassistant|ha-|\\.py$|\\.js$)"],
-        subfolders=["Code", "Config", "HomeLab"],
     ),
 }
 

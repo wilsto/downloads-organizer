@@ -20,7 +20,6 @@ def valid_config_file(tmp_path: Path) -> Path:
         "contexts": {
             "Pro": {
                 "patterns": ["(?i)(powerbi|facture)"],
-                "subfolders": ["Documents", "Presentations"],
             },
         },
         "type_mapping": {

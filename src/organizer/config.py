@@ -29,7 +29,6 @@ class NotificationConfig(BaseModel):
 
 class ContextConfig(BaseModel):
     patterns: list[str]
-    subfolders: list[str]
 
 
 class Config(BaseModel):

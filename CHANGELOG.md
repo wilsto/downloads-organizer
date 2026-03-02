@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+## [0.3.0] - 2026-03-02
+
+### Added
+- `--verbose` CLI flag for detailed per-file logging instead of summary
+- `--limit` support in deduplication phase
+- 5 integration tests for main orchestration flow
+
+### Changed
+- Removed hardcoded `.env` file loading from main — use shell-inherited env vars instead
+- Flattened deduplicator nesting (extract `_process_pair` / `_handle_duplicate` / `_handle_content_differs`)
+- Replaced fragile regex JSON extraction with `JSONDecoder.raw_decode()` in LLM classifier
+- Removed unused `subfolders` field from `ContextConfig` and `config.yaml`
+- Pinned dependency upper bounds (`pydantic<3`, `ollama<1`, `httpx<1`, `pyyaml<7`)
+
 ## [0.2.0] - 2026-02-28
 
 ### Added

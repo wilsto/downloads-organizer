@@ -19,45 +19,116 @@ class DedupResult:
 
 
 class Deduplicator:
-    def __init__(self, config: DuplicatesConfig, dry_run: bool = False):
+    def __init__(
+        self, config: DuplicatesConfig, dry_run: bool = False, verbose: bool = False
+    ):
         self._config = config
         self._dry_run = dry_run
+        self._verbose = verbose
         self._pattern = re.compile(config.pattern) if config.enabled else None
 
-    def process(self, directory: Path) -> DedupResult:
+    def process(self, directory: Path, limit: int = 0) -> DedupResult:
         result = DedupResult()
         if not self._config.enabled:
             result.skipped = True
             return result
 
         copies = self._find_copies(directory)
+        if limit > 0:
+            copies = copies[:limit]
+
+        deleted_examples: list[str] = []
+        renamed_examples: list[str] = []
+
         for copy_path, original_path in copies:
             if not original_path.exists():
                 continue
-            copy_hash = _sha256(copy_path)
-            original_hash = _sha256(original_path)
+            self._process_pair(
+                copy_path, original_path, result, deleted_examples, renamed_examples
+            )
 
-            if copy_hash == original_hash:
-                if self._dry_run:
-                    result.would_delete += 1
-                    logger.info("[DRY-RUN] Would delete duplicate: %s", copy_path.name)
-                else:
-                    copy_path.unlink()
-                    result.deleted += 1
-                    logger.info("Deleted duplicate: %s", copy_path.name)
-            else:
-                # Content differs — rename the copy to remove the (N) suffix
-                new_name = self._generate_unique_name(original_path, copy_path)
-                if self._dry_run:
-                    logger.info(
-                        "[DRY-RUN] Would rename %s → %s", copy_path.name, new_name
-                    )
-                else:
-                    copy_path.rename(copy_path.parent / new_name)
-                    logger.info("Renamed %s → %s", copy_path.name, new_name)
-                result.renamed += 1
+        if not self._verbose:
+            self._log_summary(result, deleted_examples, renamed_examples)
 
         return result
+
+    def _process_pair(
+        self,
+        copy_path: Path,
+        original_path: Path,
+        result: DedupResult,
+        deleted_examples: list[str],
+        renamed_examples: list[str],
+    ) -> None:
+        is_exact_duplicate = _sha256(copy_path) == _sha256(original_path)
+
+        if is_exact_duplicate:
+            self._handle_duplicate(copy_path, result, deleted_examples)
+        else:
+            self._handle_content_differs(copy_path, original_path, result, renamed_examples)
+
+    def _handle_duplicate(
+        self, copy_path: Path, result: DedupResult, examples: list[str]
+    ) -> None:
+        if self._dry_run:
+            result.would_delete += 1
+            label = "[DRY-RUN] Would delete duplicate: %s"
+        else:
+            copy_path.unlink()
+            result.deleted += 1
+            label = "Deleted duplicate: %s"
+
+        if self._verbose:
+            logger.info(label, copy_path.name)
+        else:
+            examples.append(copy_path.name)
+
+    def _handle_content_differs(
+        self,
+        copy_path: Path,
+        original_path: Path,
+        result: DedupResult,
+        examples: list[str],
+    ) -> None:
+        new_name = self._generate_unique_name(original_path, copy_path)
+
+        if not self._dry_run:
+            copy_path.rename(copy_path.parent / new_name)
+
+        prefix = "[DRY-RUN] " if self._dry_run else ""
+        if self._verbose:
+            logger.info("%sRenamed %s → %s", prefix, copy_path.name, new_name)
+        else:
+            examples.append(f"{copy_path.name} → {new_name}")
+        result.renamed += 1
+
+    def _log_summary(
+        self,
+        result: DedupResult,
+        deleted_examples: list[str],
+        renamed_examples: list[str],
+    ) -> None:
+        max_examples = 5
+        prefix = "[DRY-RUN] " if self._dry_run else ""
+        count_deleted = result.would_delete if self._dry_run else result.deleted
+
+        if count_deleted > 0:
+            verb = "Would delete" if self._dry_run else "Deleted"
+            logger.info("%s%s %d duplicates", prefix, verb, count_deleted)
+            for name in deleted_examples[:max_examples]:
+                logger.info("  - %s", name)
+            remaining = count_deleted - max_examples
+            if remaining > 0:
+                logger.info("  ... and %d more", remaining)
+
+        if result.renamed > 0:
+            verb = "Would rename" if self._dry_run else "Renamed"
+            logger.info("%s%s %d files", prefix, verb, result.renamed)
+            for desc in renamed_examples[:max_examples]:
+                logger.info("  - %s", desc)
+            remaining = result.renamed - max_examples
+            if remaining > 0:
+                logger.info("  ... and %d more", remaining)
 
     def _find_copies(self, directory: Path) -> list[tuple[Path, Path]]:
         pairs = []

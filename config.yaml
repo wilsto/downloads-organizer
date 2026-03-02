@@ -14,16 +14,13 @@ contexts:
     patterns:
       - "(?i)(powerbi|bisolution|playbook|agile|presentation|meeting|report|invoice|devis|facture)"
       - "(?i)\\.(pptx|xlsx)$"
-    subfolders: [Documents, Presentations, Spreadsheets, Images, Archives]
   Perso:
     patterns:
       - "(?i)(photo|img_|dcim|scan|identity|carte|passeport|permis|assurance|impot|caf)"
       - "(?i)(Photos-\\d+)"
-    subfolders: [Documents, Images, Admin, Media, Archives]
   Tech:
     patterns:
       - "(?i)(github|docker|homeassistant|ha-|hacs|node-red|reolink|bambu|argus|windsurf|vscode|\\.py$|\\.js$|\\.ts$|\\.json$|\\.yaml$|\\.yml$)"
-    subfolders: [Code, Config, HomeLab, Images, Archives]
 
 type_mapping:
   Documents: [pdf, doc, docx, odt, rtf, txt]

@@ -104,10 +104,15 @@ def _extract_json(text: str) -> str:
     if text.endswith("```"):
         text = "\n".join(text.split("\n")[:-1])
     text = text.strip()
-    # Try to find JSON object in text
-    match = _re.search(r"\{[^{}]*\}", text)
-    if match:
-        return match.group(0)
+    # Find JSON object using JSONDecoder (handles nested braces correctly)
+    decoder = json.JSONDecoder()
+    idx = text.find("{")
+    if idx != -1:
+        try:
+            obj, _ = decoder.raw_decode(text, idx)
+            return json.dumps(obj)
+        except json.JSONDecodeError:
+            pass
     return text
 
 
