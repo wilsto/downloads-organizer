@@ -1,6 +1,4 @@
 import argparse
-import logging
-import os
 import time
 from pathlib import Path
 
@@ -15,19 +13,6 @@ from organizer.notifier import Notifier, RunSummary
 from organizer.scanner import scan_directory
 
 DEFAULT_CONFIG = Path(__file__).parent.parent.parent / "config.yaml"
-ENV_FILE = Path("C:/Users/Will/OneDrive/Dev/Homelab/scripts/.env")
-
-
-def _load_env(env_path: Path) -> None:
-    """Load environment variables from a .env file (key=value format)."""
-    if not env_path.exists():
-        return
-    for line in env_path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip())
 
 
 def main():
@@ -47,11 +32,13 @@ def main():
         help="Process only the first N files (0 = no limit)",
     )
     parser.add_argument(
-        "--env-file", type=Path, default=ENV_FILE, help="Path to .env file"
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Show detailed per-file actions instead of summary",
     )
     args = parser.parse_args()
 
-    _load_env(args.env_file)
     config = load_config(args.config)
     if args.dry_run:
         config.dry_run = True
@@ -64,8 +51,10 @@ def main():
 
     # Phase 1: Deduplicate
     log.info("Phase 1: Deduplication")
-    dedup = Deduplicator(config.duplicates, dry_run=config.dry_run)
-    dedup_result = dedup.process(Path(config.source))
+    dedup = Deduplicator(
+        config.duplicates, dry_run=config.dry_run, verbose=args.verbose
+    )
+    dedup_result = dedup.process(Path(config.source), limit=args.limit)
     summary.duplicates_deleted = dedup_result.deleted
     log.info(
         "Dedup done: %d deleted, %d renamed",

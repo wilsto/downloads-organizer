@@ -84,3 +84,27 @@ def test_disabled_dedup(tmp_path: Path):
     result = dedup.process(tmp_path)
     assert result.deleted == 0
     assert result.skipped is True
+
+
+def test_process_respects_limit(tmp_path: Path):
+    """With 5 duplicate pairs and limit=2, only 2 should be processed."""
+    for i in range(5):
+        name = f"file{i}"
+        (tmp_path / f"{name}.txt").write_text("same")
+        (tmp_path / f"{name} (1).txt").write_text("same")
+
+    dedup = make_dedup()
+    result = dedup.process(tmp_path, limit=2)
+    assert result.deleted == 2
+
+
+def test_process_limit_zero_processes_all(tmp_path: Path):
+    """limit=0 means no limit — all duplicates should be processed."""
+    for i in range(5):
+        name = f"file{i}"
+        (tmp_path / f"{name}.txt").write_text("same")
+        (tmp_path / f"{name} (1).txt").write_text("same")
+
+    dedup = make_dedup()
+    result = dedup.process(tmp_path, limit=0)
+    assert result.deleted == 5
